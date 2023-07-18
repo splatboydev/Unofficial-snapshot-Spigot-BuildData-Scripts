@@ -1,4 +1,4 @@
-minecraftversion='20w12a'
-baseminecraftversion='1.15.2'
-minecraftserverurl='https://launcher.mojang.com/v1/objects/3d9657a172415a163e25096942f5a4d110b984a0/server.jar'
-minecraftservermd5sum='82ad7500a0b92f9596218634ecff1676'
+minecraftversion='21w13a_or_b'
+baseminecraftversion='1.20'
+minecraftserverurl='https://piston-data.mojang.com/v1/objects/6241fc14ce7a659f371683a72aa24c155f60cce1/server.jar'
+minecraftservermd5sum='6241fc14ce7a659f371683a72aa24c155f60cce1'

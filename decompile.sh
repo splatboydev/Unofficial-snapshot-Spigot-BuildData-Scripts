@@ -8,8 +8,8 @@ spigotdecompiledir="$decompiledir/spigot"
 forgedecompiledir="$decompiledir/forge"
 forgeflowerversion="1.5.380.19"
 forgeflowerurl="http://files.minecraftforge.net/maven/net/minecraftforge/forgeflower/$forgeflowerversion/forgeflower-$forgeflowerversion.jar"
-# temp use patched version
-forgeflowerurl="https://zachbr.keybase.pub/paper/forgeflower-patched/forgeflower-1.5.380.19.jar?dl=1"
+# temp use patched version // seems suspicious, but it's down anyways
+#forgeflowerurl="https://zachbr.keybase.pub/paper/forgeflower-patched/forgeflower-1.5.380.19.jar?dl=1"
 forgeflowerbin="$workdir/ForgeFlower/$forgeflowerversion.jar"
 # TODO: Make this better? We don't need spigot compat for this stage
 forgefloweroptions="-dgs=1 -hdc=0 -asc=1 -udv=1 -jvn=1"
@@ -106,4 +106,3 @@ if [ ! -e "$currentlink" ] || [ -L "$currentlink" ]; then
 	rm -rf "$currentlink" || true
 	ln -sfn "$minecraftversion" "$currentlink" || echo "Failed to set current symlink"
 fi
-

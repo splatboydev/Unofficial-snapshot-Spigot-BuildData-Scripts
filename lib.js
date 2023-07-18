@@ -1,73 +1,22 @@
-const request = require('cloudscraper')
-const { get } = request
+const { get } = require('node:https');
 const assert = require('assert').strict
 const fs = require('fs')
 const util = require('util')
-const shell = require('shelljs')
-const { URL } = require('url')
-const process = require('process')
-const { exit } = process
-const execa = require('execa')
-const getStream = require('get-stream')
 const writeFile = util.promisify(fs.writeFile)
 const readFile = util.promisify(fs.readFile)
 async function read(f) {
     return await readFile(f, 'utf8')
 }
-const readDir = util.promisify(fs.readdir)
-const stat = util.promisify(fs.stat)
-const exists = util.promisify(fs.exists)
-function shelljs2promise(f) {
-    return async function (...args) {
-        return await new Promise((resolve, reject) => {
-            const result = f(...args)
-            return (result.code === 0 || result.code === void 0) ? resolve(result) : reject(result)
-        })
-    }
-}
 function isNumeric(num) {
     return !isNaN(num)
 }
-const pushd = shelljs2promise(shell.pushd)
-const popd = shelljs2promise(shell.popd)
-const mv = shelljs2promise(shell.mv)
-const cp = shelljs2promise(shell.cp)
-const rm = shelljs2promise(shell.rm)
-const mkdir = shelljs2promise(shell.mkdir)
-const chmod = shelljs2promise(shell.chmod)
-const sed = shelljs2promise(shell.sed)
-const find = shelljs2promise(shell.find)
-const touch = shelljs2promise(shell.touch)
-const ls = shelljs2promise(shell.ls)
-async function execaToStdIO(...args) {
-    const r = execa(...args)
-    r.stdout.pipe(process.stdout)
-    r.stderr.pipe(process.stderr)
-    return await r
-}
-function package_async_program(f) {
-    return async () => {
-        try {
-            await f()
-            exit(0)
-        } catch (e) {
-            console.error(e)
-            exit(1)
-        }
-    }
-}
-async function with_d(d, f) {
-    await pushd(d)
-    await f()
-    await popd()
-}
 
-const builddata_base = '455d45a4244894335cd07451bdda79ccd380aff6' // should be latest commit
-const base_version = '1.15.2'
+//const builddata_base = '455d45a4244894335cd07451bdda79ccd380aff6' // does not appear to be used anywhere
+const base_version = '1.20'
 // https://launchermeta.mojang.com/mc/game/version_manifest.json
-const base_server_mappings = 'https://launcher.mojang.com/v1/objects/59c55ae6c2a7c28c8ec449824d9194ff21dc7ff1/server.txt'
-const current_version = '20w12a'
-const current_server_mappings = 'https://launcher.mojang.com/v1/objects/5206e5affa49812606701ec4d6e84b398215e89d/server.txt'
+const base_server_mappings = 'https://piston-data.mojang.com/v1/objects/15e61168fd24c7950b22cd3b9e771a7ce4035b41/server.txt' //https://piston-meta.mojang.com/v1/packages/52f6c28f40ee907d167a1f217d7a48cbec4936c5/1.20.json
+const current_version = '21w13a_or_b'
+const current_server_mappings = 'https://piston-data.mojang.com/v1/objects/370d31c1b7d700ee65ddeb25f975a2e67d1d13d0/server.txt' //https://piston-meta.mojang.com/v1/packages/fc4fcc596f6f3466c379a8aa3c4a319474d27cf0/23w13a_or_b.json
 const custom_class_mappings = new Map([
     ["net.minecraft.world.level.levelgen.carver.HellCaveWorldCarver", "net.minecraft.world.level.levelgen.carver.NetherWorldCarver"],
     ["net.minecraft.world.level.levelgen.placement.nether.HellFireDecorator", "net.minecraft.world.level.levelgen.placement.nether.FireDecorator"],
@@ -82,6 +31,7 @@ const custom_class_mappings = new Map([
     ["net.minecraft.world.entity.monster.PigZombie$PigZombieHurtByOtherGoal", "net.minecraft.world.entity.monster.ZombifiedPiglin$ZombifiedPiglinHurtByOtherGoal"],
     ["net.minecraft.world.level.biome.NetherBiome", "net.minecraft.world.level.biome.NetherWastesBiome"],
 ])
+
 const custom_fields_mappings = new Map([
     ["Biomes", new Map([
         ["NETHER", "NETHER_WASTES"]
@@ -157,8 +107,13 @@ async function parse_base_spigot_mappings() {
     return { class_mappings: clas, fields_mappings: fields, methods_mappings: methods }
 }
 async function get_parse_proguard_mappings(url) {
-    const lines = (await get(url))
-        .split('\n')
+    var data;
+    await get(url, res => {
+        res.on('data', (d) => {
+            data = d;
+        })
+    })
+    data.split('\n')
         .filter(x => x !== '' && !x.startsWith('#'))
     const blocks = []
     while (lines.length != 0) {
@@ -287,6 +242,7 @@ function jvm_sig_to_java_method(sig) {
     }
     return [jvm_sig_to_java_type(ret), args_result.join(',')]
 }
+
 async function gen_current_spigot_mappings() {
     console.log('gen_current_spigot_mappings: get mojang mappings ...')
     const [base_mojang, current_mojang] = await Promise.all([
